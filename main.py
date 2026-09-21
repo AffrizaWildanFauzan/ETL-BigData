@@ -4,46 +4,68 @@ from etl.extract import extract_data
 from etl.transform import transform_data
 from etl.load import load_to_file, load_to_database
 
-# Konfigurasi logging
+# ============================================================
+# Konfigurasi Logging
+# ============================================================
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# Konfigurasi path
-RAW_PATH = "data/raw/traffic_accidents.csv"
-CLEAN_PARQUET_PATH = "data/clean/traffic_accidents_clean.parquet"
-CLEAN_CSV_PATH = "data/clean/traffic_accidents_clean.csv"
+# ============================================================
+# Konfigurasi Path
+# ============================================================
+RAW_PATH = "data/raw/urban_traffic_congestion_travel_time.csv"
+CLEAN_PARQUET_PATH = "data/clean/urban_traffic_clean.parquet"
+CLEAN_CSV_PATH = "data/clean/urban_traffic_clean.csv"
 
-# Konfigurasi database (opsional)
-DB_URL = os.getenv("DB_URL", "")  # contoh: postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
-DB_TABLE = "traffic_accidents"
+# ============================================================
+# Konfigurasi Database (opsional)
+# ============================================================
+# Contoh: postgresql+psycopg2://airflow:airflow@localhost:5432/airflow
+DB_URL = os.getenv("DB_URL", "")
+DB_TABLE = "urban_traffic_congestion"
 
 
 def run_etl():
+    """
+    Jalankan pipeline ETL lengkap:
+        1. Extract dari CSV
+        2. Transform
+        3. Load ke file (Parquet + CSV)
+        4. Load ke database (opsional)
+    """
     logger.info("=" * 60)
-    logger.info("ETL BATCH TRAFFIC ACCIDENTS - START")
+    logger.info("ETL BATCH URBAN TRAFFIC CONGESTION - START")
     logger.info("=" * 60)
 
-    # Extract
+    # ============================================================
+    # 1. EXTRACT
+    # ============================================================
     df_raw = extract_data(RAW_PATH)
 
-    # Transform
+    # ============================================================
+    # 2. TRANSFORM
+    # ============================================================
     df_clean = transform_data(df_raw)
 
-    # Load ke file
+    # ============================================================
+    # 3. LOAD — ke file
+    # ============================================================
     load_to_file(df_clean, CLEAN_PARQUET_PATH, fmt='parquet')
     load_to_file(df_clean, CLEAN_CSV_PATH, fmt='csv')
 
-    # Load ke database (opsional, hanya jika DB_URL diset)
+    # ============================================================
+    # 4. LOAD — ke database (opsional)
+    # ============================================================
     if DB_URL:
         load_to_database(df_clean, DB_URL, DB_TABLE)
     else:
         logger.info("[LOAD] DB_URL tidak diset, skip load ke database")
 
     logger.info("=" * 60)
-    logger.info("ETL BATCH TRAFFIC ACCIDENTS - FINISHED")
+    logger.info("ETL BATCH URBAN TRAFFIC CONGESTION - FINISHED")
     logger.info("=" * 60)
 
 
