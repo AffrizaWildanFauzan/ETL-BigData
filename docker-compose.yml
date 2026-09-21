@@ -1,0 +1,70 @@
+version: '3.8'
+
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.8.1
+  environment:
+    - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@traffic-meta-db:5432/airflow
+    - AIRFLOW__CORE__LOAD_EXAMPLES=False
+    - AIRFLOW__CORE__DAGS_FOLDER=/opt/airflow/dags
+    - AIRFLOW__CORE__DEFAULT_TIMEZONE=Asia/Jakarta
+    - PYTHONPATH=/opt/airflow
+    - _PIP_ADDITIONAL_REQUIREMENTS=pandas pyarrow sqlalchemy psycopg2-binary
+  volumes:
+    - ./dags:/opt/airflow/dags
+    - ./etl:/opt/airflow/etl
+    - ./data:/opt/airflow/data
+    - ./sql:/opt/airflow/sql
+    - ./logs:/opt/airflow/logs
+  depends_on:
+    traffic-meta-db:
+      condition: service_healthy
+
+services:
+  traffic-meta-db:
+    image: postgres:13
+    container_name: traffic-meta-db
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - traffic_pgdata:/var/lib/postgresql/data
+
+  airflow-init:
+    <<: *airflow-common
+    container_name: traffic-airflow-init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com
+
+  airflow-webserver:
+    <<: *airflow-common
+    container_name: traffic-airflow-webserver
+    command: webserver
+    ports:
+      - "8081:8080"
+    restart: unless-stopped
+
+  airflow-scheduler:
+    <<: *airflow-common
+    container_name: traffic-airflow-scheduler
+    command: scheduler
+    restart: unless-stopped
+
+volumes:
+  traffic_pgdata:

@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Data
+data/raw/*.csv
+data/clean/*.parquet
+data/clean/*.csv
+!data/clean/.gitkeep
+
+# Logs
+logs/
+*.log
+
+# Airflow
+airflow.cfg
+airflow.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
