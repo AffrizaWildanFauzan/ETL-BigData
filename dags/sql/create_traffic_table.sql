@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS urban_traffic_congestion (
     city_zone            VARCHAR(50),
     road_type            VARCHAR(50),
     traffic_volume       INTEGER,
-    average_speed_kmh    DOUBLE PRECISION,
+    average_speed_kmph    DOUBLE PRECISION,
     weather_condition    VARCHAR(50),
     accident_reported    BOOLEAN,
     travel_time_minutes  DOUBLE PRECISION,

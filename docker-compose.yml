@@ -57,7 +57,7 @@ services:
     container_name: traffic-airflow-webserver
     command: webserver
     ports:
-      - "8081:8080"
+      - "8082:8080"
     restart: unless-stopped
 
   airflow-scheduler:
