@@ -1,12 +1,3 @@
-# %% [markdown]
-# # Analisis Data Kemacetan Lalu Lintas — Kota Metropolia
-#
-# **Tujuan proyek:** menurunkan tingkat kemacetan sebesar **15%**, dengan fokus pada *peak hours*.
-#
-# Dataset: `urban_traffic_congestion_travel_time.csv` (2.800 baris data per jam,
-# 1 Jan 2024 – 26 Apr 2024).
-
-# %%
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,13 +13,10 @@ DATA_PATH = "urban_traffic_congestion_travel_time.csv"
 df = pd.read_csv(DATA_PATH)
 df.head()
 
-# %% [markdown]
 # ## 1. Persiapan Data
-#
 # Membuat fitur turunan yang dibutuhkan untuk analisis: `hour`, `day_of_week`,
 # `is_weekend`, dan `is_peak_hour`.
 
-# %%
 df["date_time"] = pd.to_datetime(df["date_time"])
 df["hour"] = df["date_time"].dt.hour
 df["date"] = df["date_time"].dt.date
@@ -49,14 +37,10 @@ print(f"Zona kota             : {sorted(df['city_zone'].unique())}")
 print(f"Tipe jalan            : {sorted(df['road_type'].unique())}")
 print(f"Kondisi cuaca         : {sorted(df['weather_condition'].unique())}")
 
-# %% [markdown]
-# ---
 # ## 2. Volume Kendaraan Berdasarkan Jam
-#
 # Bagaimana volume kendaraan berdasarkan jam? Jam berapa traffic
 # paling tinggi?
 
-# %%
 hourly_volume = (
     df.groupby("hour")["traffic_volume"]
     .agg(["mean", "median", "std", "count"])
@@ -73,7 +57,6 @@ jam_puncak = hourly_volume_sorted.index[0]
 print(f"\n>> Traffic paling tinggi terjadi pada pukul {jam_puncak:02d}.00, "
       f"dengan rata-rata {hourly_volume_sorted.iloc[0]['rata_rata']:.0f} kendaraan/jam.")
 
-# %%
 fig, ax = plt.subplots(figsize=(11, 5))
 ax.bar(hourly_volume.index, hourly_volume["rata_rata"], color="#3b6ea5", zorder=3)
 ax.axvspan(6.5, 9.5, color="orange", alpha=0.15, label="Jam sibuk pagi (07–09)")
@@ -87,13 +70,9 @@ plt.tight_layout()
 plt.savefig("chart_volume_per_jam.png")
 plt.show()
 
-# %% [markdown]
-# ---
 # ## 3. Volume Traffic: Weekday vs Weekend
-#
 # Apakah traffic lebih tinggi pada weekday atau weekend?
 
-# %%
 daytype_summary = (
     df.groupby("day_type")["traffic_volume"]
     .agg(["mean", "median", "std", "count"])
@@ -112,7 +91,6 @@ print(f"Rata-rata weekend : {weekend_vals.mean():.1f}")
 print(f"Uji t (Welch)     : t = {t_stat:.3f}, p-value = {p_val:.4f} -> perbedaan {signifikan}")
 print(f">> Volume traffic secara rata-rata lebih tinggi pada {lebih_tinggi}.")
 
-# %%
 fig, ax = plt.subplots(figsize=(6, 5))
 df.boxplot(column="traffic_volume", by="day_type", ax=ax, grid=False)
 ax.set_title("Distribusi Volume Kendaraan: Weekday vs Weekend")
@@ -123,13 +101,9 @@ plt.tight_layout()
 plt.savefig("chart_weekday_weekend.png")
 plt.show()
 
-# %% [markdown]
-# ---
 # ## 4. Rata-rata Kecepatan Berdasarkan Jam
-#
 # Bagaimana rata-rata speed berdasarkan jam?
 
-# %%
 hourly_speed = df.groupby("hour")["average_speed_kmph"].mean().round(1)
 print(hourly_speed.sort_values().head(5).rename("kecepatan_rata_rata (km/jam)"))
 
@@ -137,7 +111,6 @@ jam_lambat = hourly_speed.idxmin()
 print(f"\n>> Kecepatan rata-rata terendah terjadi pada pukul {jam_lambat:02d}.00 "
       f"({hourly_speed.min():.1f} km/jam) — konsisten dengan jam padat pada bagian 2.")
 
-# %%
 fig, ax1 = plt.subplots(figsize=(11, 5))
 ax1.bar(hourly_volume.index, hourly_volume["rata_rata"], color="#c7d9ec", zorder=2, label="Volume (batang)")
 ax1.set_xlabel("Jam")
@@ -153,21 +126,16 @@ fig.tight_layout()
 plt.savefig("chart_volume_vs_speed.png")
 plt.show()
 
-# %% [markdown]
 # Terlihat pola berlawanan arah (*inverse relationship*) yang jelas antara volume
 # kendaraan dan kecepatan rata-rata — mengonfirmasi bahwa jam dengan volume tinggi
 # adalah jam dengan kecepatan terendah (indikasi kemacetan).
 
-# %%
 corr_vol_speed = df["traffic_volume"].corr(df["average_speed_kmph"])
 print(f"Korelasi Pearson volume vs kecepatan (level data mentah): r = {corr_vol_speed:.3f}")
 
-# %% [markdown]
-# ---
 # ## 5. Analisis Congestion
 # ### 5a. Kapan Congestion Paling Tinggi?
 
-# %%
 congestion_by_hour = (
     pd.crosstab(df["hour"], df["congestion_level"], normalize="index") * 100
 ).round(1)
@@ -178,7 +146,6 @@ pct_tertinggi = congestion_by_hour["High"].max()
 print(f"\n>> Proporsi congestion 'High' tertinggi terjadi pada pukul "
       f"{jam_congestion_tertinggi:02d}.00 ({pct_tertinggi:.1f}% dari observasi jam tersebut).")
 
-# %%
 fig, ax = plt.subplots(figsize=(12, 5))
 colors = {"Low": "#5cb85c", "Medium": "#f0ad4e", "High": "#d9534f"}
 bottom = np.zeros(24)
@@ -195,10 +162,8 @@ plt.tight_layout()
 plt.savefig("chart_congestion_per_jam.png")
 plt.show()
 
-# %% [markdown]
 # ### 5b. Apakah `is_peak_hour` Berhubungan dengan Congestion?
 
-# %%
 ct_peak = pd.crosstab(df["is_peak_hour"], df["congestion_level"])
 ct_peak.index = ct_peak.index.map({True: "Jam Sibuk", False: "Bukan Jam Sibuk"})
 ct_peak_pct = (ct_peak.div(ct_peak.sum(axis=1), axis=0) * 100).round(1)
@@ -211,10 +176,7 @@ chi2, p_peak, dof, _ = stats.chi2_contingency(ct_peak)
 signif = "SIGNIFIKAN" if p_peak < 0.05 else "tidak signifikan"
 print(f"\nUji Chi-square: chi2 = {chi2:.2f}, df = {dof}, p-value = {p_peak:.6f} -> hubungan {signif}")
 
-# %% [markdown]
 # ### 5c. Apakah Congestion Berbeda Berdasarkan `road_type`?
-
-# %%
 ct_road = pd.crosstab(df["road_type"], df["congestion_level"])
 ct_road_pct = (ct_road.div(ct_road.sum(axis=1), axis=0) * 100).round(1)
 print("Proporsi congestion per tipe jalan (%):")
@@ -224,13 +186,11 @@ chi2_r, p_road, dof_r, _ = stats.chi2_contingency(ct_road)
 signif_r = "SIGNIFIKAN" if p_road < 0.05 else "tidak signifikan"
 print(f"\nUji Chi-square: chi2 = {chi2_r:.2f}, df = {dof_r}, p-value = {p_road:.6f} -> hubungan {signif_r}")
 
-# %% [markdown]
 # ### 5d. Apakah Weather Condition Berhubungan dengan Traffic?
 #
 # Diuji dari dua sisi: (i) volume kendaraan berdasarkan cuaca, dan (ii) tingkat
 # congestion berdasarkan cuaca.
 
-# %%
 weather_volume = df.groupby("weather_condition")["traffic_volume"].agg(["mean", "std", "count"]).round(1)
 print("Volume kendaraan berdasarkan cuaca:")
 print(weather_volume)
@@ -249,7 +209,6 @@ chi2_w, p_weather, dof_w, _ = stats.chi2_contingency(ct_weather)
 print(f"Uji Chi-square cuaca vs congestion: chi2 = {chi2_w:.2f}, df = {dof_w}, "
       f"p-value = {p_weather:.4f} -> {'signifikan' if p_weather < 0.05 else 'tidak signifikan'}")
 
-# %%
 fig, axes = plt.subplots(1, 2, figsize=(13, 5))
 weather_volume["mean"].sort_values().plot(kind="barh", ax=axes[0], color="#3b6ea5")
 axes[0].set_xlabel("Rata-rata volume kendaraan")
@@ -264,12 +223,9 @@ plt.tight_layout()
 plt.savefig("chart_weather.png")
 plt.show()
 
-# %% [markdown]
-# ---
 # ## 6. Analisis Accident
 # ### 6a. Apakah Traffic Volume Berbeda Ketika Terjadi Accident?
 
-# %%
 accident_summary = df.groupby("accident_reported")["traffic_volume"].agg(["mean", "std", "count"]).round(1)
 print(accident_summary)
 
@@ -283,10 +239,8 @@ lebih_besar = "lebih tinggi saat ada accident" if vol_acc.mean() > vol_no_acc.me
 print(f">> Rata-rata volume kendaraan {lebih_besar} "
       f"({vol_acc.mean():.0f} vs {vol_no_acc.mean():.0f}).")
 
-# %% [markdown]
 # ### 6b. Apakah Accident Lebih Sering Terjadi pada Jam Tertentu?
 
-# %%
 accident_by_hour = (
     df.groupby("hour")["accident_reported"]
     .apply(lambda s: (s == "Yes").mean() * 100)
@@ -305,7 +259,6 @@ print(f"\nUji Chi-square goodness-of-fit (distribusi accident merata sepanjang 2
       f"chi2 = {chi2_acc_hour.statistic:.2f}, p-value = {chi2_acc_hour.pvalue:.4f} -> "
       f"{'TIDAK merata (ada pola jam tertentu)' if chi2_acc_hour.pvalue < 0.05 else 'relatif merata di semua jam'}")
 
-# %%
 fig, ax = plt.subplots(figsize=(11, 5))
 bars = ax.bar(accident_by_hour.index, accident_by_hour.values, color="#8b3a3a", zorder=3)
 ax.axvspan(6.5, 9.5, color="orange", alpha=0.12, label="Jam sibuk pagi")
@@ -319,11 +272,7 @@ plt.tight_layout()
 plt.savefig("chart_accident_per_jam.png")
 plt.show()
 
-# %% [markdown]
-# ---
 # ## 7. Ringkasan Temuan & Rekomendasi
-
-# %%
 print("=" * 70)
 print("RINGKASAN TEMUAN UTAMA")
 print("=" * 70)
@@ -346,7 +295,6 @@ print(f"10. Jam paling rawan accident     : pukul {jam_paling_rawan:02d}.00 "
       f"({accident_by_hour.max():.1f}%)")
 print("=" * 70)
 
-# %% [markdown]
 # ### Implikasi untuk Target Penurunan Kemacetan 15%
 #
 # - **Fokuskan intervensi pada jam sibuk** yang teridentifikasi di atas (bukan
