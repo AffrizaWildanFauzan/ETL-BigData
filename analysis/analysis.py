@@ -9,7 +9,7 @@ plt.rcParams["axes.grid"] = True
 plt.rcParams["grid.alpha"] = 0.3
 pd.set_option("display.float_format", lambda x: f"{x:,.2f}")
 
-DATA_PATH = "urban_traffic_congestion_travel_time.csv"
+DATA_PATH = "data/urban_traffic_congestion_travel_time.csv"
 df = pd.read_csv(DATA_PATH)
 df.head()
 
